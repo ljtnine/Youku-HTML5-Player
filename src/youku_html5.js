@@ -283,39 +283,23 @@ function switchLang(lang) {
     if (audioLangs.length > 1)
         abpinst.removePopup(), abpinst.createPopup(_t('currentLang') + (knownLangs[lang] || lang), 3e3);
 }
-let fetchSrcSuccess;
 function fetchSrc(extraQuery) {
-    fetchSrcSuccess = false;
     tempPwd = extraQuery;
-    document.head.appendChild(_('script', {
-        src: '//ups.youku.com/ups/get.json?callback=YHP_fetchSrc&ccode=0502&client_ip=192.168.1.2&utid=' + encodeURIComponent(getCookie('cna')) + '&client_ts=' + Date.now() + '&vid=' + vid + (extraQuery || ''),
-        event: {
-            error: function (e) {
-                this.remove();
-                createPopup({
-                    content: [_('p', { style: { fontSize: '16px' } }, [_('text', _t('fetchSourceErr'))]), _('text', e.message)],
-                    showConfirm: false
-                });
-            },
-            load: function () {
-                this.remove();
-                setTimeout(fetchSrcChecker, 500);
-            }
-        }
-    }))
+    document.head.appendChild(_('script', {}, [_('text',
+        'fetch("//ups.youku.com/ups/get.json?ccode=0502&client_ip=192.168.1.2&utid=' + encodeURIComponent(getCookie('cna')) + '&client_ts=' + Date.now() + '&vid=' + vid + (extraQuery || '')+'", {'+
+            "method: 'GET',"+
+            "credentials: 'include',"+
+            "cache: 'no-cache'"+
+        "}).then(function (r) {"+
+            "r.json().then(function(json){"+
+                "window.dispatchEvent(new CustomEvent('YHP_fetchSrc',{detail:json}))"+
+            "})"+
+        "}).catch(function(e){window.dispatchEvent(new CustomEvent('YHP_fetchSrc',{detail:{data:{error:e.message}}}))})"
+    )])).remove();
 }
-document.head.appendChild(_('script', {}, [_('text', 'function YHP_fetchSrc(json){window.dispatchEvent(new CustomEvent("YHP_fetchSrc",{detail:json}))}')]))
 window.addEventListener('YHP_fetchSrc', function (e) {
     fetchSrcThen(e.detail);
 })
-function fetchSrcChecker() {
-    if (!fetchSrcSuccess) {
-        createPopup({
-            content: [_('p', { style: { fontSize: '16px' } }, [_('text', _t('fetchSourceErr'))])],
-            showConfirm: false
-        });
-    }
-}
 function fetchSrcThen(json) {
     fetchSrcSuccess = true;
     if (json.data.error) {
@@ -944,35 +928,20 @@ position:absolute;bottom:0;left:0;right:0;font-size:15px
                 cursor: 'pointer',
             }
         }));
-        let fetchInfoSuccess = false;
-        document.head.appendChild(_('script', {
-            src: '//ups.youku.com/ups/get.json?callback=YHP_fetchInfo&ccode=0502&client_ip=192.168.1.2&utid=' + encodeURIComponent(getCookie('cna')) + '&client_ts=' + Date.now() + '&vid=' + vid,
-            event: {
-                error: function (e) {
-                    this.remove();
-                    createPopup({
-                        content: [_('p', { style: { fontSize: '16px' } }, [_('text', _t('fetchInfoErr'))]), _('text', e.message)],
-                        showConfirm: false
-                    });
-                },
-                load: function () {
-                    this.remove();
-                    setTimeout(fetchInfoChecker, 500);
-                }
-            }
-        }))
-        document.head.appendChild(_('script', {}, [_('text', 'function YHP_fetchInfo(json){window.dispatchEvent(new CustomEvent("YHP_fetchInfo",{detail:json}))}')]))
+        document.head.appendChild(_('script', {}, [_('text',
+            'fetch("//ups.youku.com/ups/get.json?ccode=0502&client_ip=192.168.1.2&utid=' + encodeURIComponent(getCookie('cna')) + '&client_ts=' + Date.now() + '&vid=' + vid + '", {'+
+                "method: 'GET',"+
+                "credentials: 'include',"+
+                "cache: 'no-cache'"+
+            "}).then(function (r) {"+
+                "r.json().then(function(json){"+
+                    "window.dispatchEvent(new CustomEvent('YHP_fetchInfo',{detail:json}))"+
+                "})"+
+            "}).catch(function(e){window.dispatchEvent(new CustomEvent('YHP_fetchInfo',{detail:{data:{error:e.message}}}))})"
+        )])).remove();
         window.addEventListener('YHP_fetchInfo', function (e) {
             fetchInfoThen(e.detail);
         })
-        function fetchInfoChecker() {
-            if (!fetchInfoSuccess) {
-                createPopup({
-                    content: [_('p', { style: { fontSize: '16px' } }, [_('text', _t('fetchSourceErr'))])],
-                    showConfirm: false
-                });
-            }
-        }
         function fetchInfoThen(json) {
             fetchInfoSuccess = true;
             if (!json.data.video) {
